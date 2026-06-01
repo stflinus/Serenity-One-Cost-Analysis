@@ -1,13 +1,11 @@
 import { useState, useMemo } from "react";
 import { CalculatorInputs } from "./types";
-import { RESORT_LIST } from "./data/resorts";
 import { calculateTimeshareCosts } from "./utils/calculator";
 import { SerenityLogo } from "./components/SerenityLogo";
 import { InputForm } from "./components/InputForm";
 import { StatsGrid } from "./components/StatsGrid";
 import { CashFlowTable } from "./components/CashFlowTable";
-import { Landmark, ArrowDownCircle, Info, PhoneCall, Copy, Check, ExternalLink, Share2, Sparkles } from "lucide-react";
-import { MiniSIcon } from "./components/MiniSIcon";
+import { Landmark, Info, PhoneCall } from "lucide-react";
 
 const INITIAL_INPUTS: CalculatorInputs = {
   resortId: "mvc", // Marriott Vacation Club
@@ -47,18 +45,6 @@ const INITIAL_INPUTS: CalculatorInputs = {
 };
 
 export default function App() {
-  const [copied, setCopied] = useState(false);
-  
-  const handleCopyLink = () => {
-    // Falls back to direct live testing URL in case of localhost
-    const testUrl = window.location.origin.includes("localhost") || !window.location.origin
-      ? "https://ais-pre-uint65jwfwksg3wf2zau5z-22470939327.us-west2.run.app" 
-      : window.location.origin;
-    navigator.clipboard.writeText(testUrl);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
-
   // Predefined realistic default values for timeshare contract calculations
   const [inputs, setInputs] = useState<CalculatorInputs>(INITIAL_INPUTS);
 
@@ -108,80 +94,6 @@ export default function App() {
             <p className="text-xs text-slate-600 leading-relaxed max-w-4xl">
               Due to catastrophic insurance hikes and hurricanes in 2024–2025, properties under HGV, PVC, and Bluegreen in coastal regions experienced unprecedented <span className="font-semibold text-slate-800">10% to 17% maintenance spikes</span>. Ensure your annual increase slider reflects historical regional rates for extreme precision.
             </p>
-          </div>
-        </div>
-
-        {/* Live Testing SandBox Web Link & Mini S Icon Card */}
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200/80 p-5 flex flex-col md:flex-row items-center justify-between gap-6">
-          <div className="flex items-center gap-4">
-            {/* Elegant glowing miniature 'S' icon thumbnail representation */}
-            <MiniSIcon size={30} className="shadow-lg shadow-indigo-150 transform hover:scale-105 transition-transform" />
-            <div className="space-y-1">
-              <div className="flex items-center gap-2">
-                <span className="text-xs font-bold uppercase tracking-widest text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-md">
-                  Testing Sandbox
-                </span>
-                <span className="flex h-2 w-2 relative">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-                </span>
-              </div>
-              <h3 className="text-base font-extrabold text-slate-800">
-                Serenity 1 Calculator Public Web Link
-              </h3>
-              <p className="text-xs text-slate-500">
-                Share this secure web link to perform live multi-scenario validations and client audits instantly.
-              </p>
-            </div>
-          </div>
-
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full md:w-auto">
-            {/* Interactive copyable address box */}
-            <div className="flex items-center bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs font-mono text-slate-600 select-all max-w-full overflow-x-auto gap-2">
-              <Share2 className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-              <span className="truncate max-w-[280px]">
-                {window.location.origin.includes("localhost") || !window.location.origin
-                  ? "https://ais-pre-uint65jwfwksg3wf2zau5z-22470939327.us-west2.run.app"
-                  : window.location.origin}
-              </span>
-            </div>
-
-            <div className="flex gap-2">
-              <button
-                onClick={handleCopyLink}
-                className={`flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-4 py-2 rounded-lg text-xs font-bold transition-all border ${
-                  copied
-                    ? "bg-emerald-50 text-emerald-700 border-emerald-300"
-                    : "bg-indigo-600 text-white hover:bg-indigo-700 border-indigo-600 hover:border-indigo-700 shadow-sm"
-                }`}
-              >
-                {copied ? (
-                  <>
-                    <Check className="w-3.5 h-3.5" />
-                    Copied!
-                  </>
-                ) : (
-                  <>
-                    <Copy className="w-3.5 h-3.5" />
-                    Copy Link
-                  </>
-                )}
-              </button>
-
-              <a
-                href={
-                  window.location.origin.includes("localhost") || !window.location.origin
-                    ? "https://ais-pre-uint65jwfwksg3wf2zau5z-22470939327.us-west2.run.app"
-                    : window.location.origin
-                }
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center justify-center gap-1.5 px-4 py-2 bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-700 rounded-lg text-xs font-bold transition-all shadow-sm shrink-0"
-              >
-                <ExternalLink className="w-3.5 h-3.5 text-slate-500" />
-                Open Tab
-              </a>
-            </div>
           </div>
         </div>
 
