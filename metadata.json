@@ -1,0 +1,8 @@
+{
+  "name": "Serenity 1 Calculator",
+  "description": "An interactive, strategic simulator built to calculate the historical and future compounding costs of timeshare ownership, maintenance fees, and financial opportunity losses.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
