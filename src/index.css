@@ -4,3 +4,48 @@
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
 }
+
+@media print {
+  /* Optimize color rendering in print queue */
+  * {
+    color-adjust: exact !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  body {
+    background-color: #ffffff !important;
+    color: #0f172a !important;
+    font-size: 11px !important;
+  }
+
+  /* Reset main wrapping containers to avoid margins and layout clipping */
+  main {
+    padding: 0 !important;
+    margin: 0 !important;
+    max-width: none !important;
+    width: 100% !important;
+  }
+
+  /* Ensure cards and details on the StatsGrid and Table don't break halfway through a page */
+  .card, .p-4, .p-6, .rounded-xl, tr {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+  }
+
+  /* Prevent table header from repeating in a corrupted way */
+  thead {
+    display: table-header-group !important;
+  }
+
+  /* Clear backgrounds or add high-contrast borders for print lists */
+  .border {
+    border-color: #cbd5e1 !important;
+  }
+
+  /* Force table layouts to collapse cleanly */
+  table {
+    width: 100% !important;
+    border-collapse: collapse !important;
+  }
+}

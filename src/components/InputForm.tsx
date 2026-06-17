@@ -26,9 +26,26 @@ export const InputForm: React.FC<InputFormProps> = ({ inputs, onChange, onReset 
   const [tempExitYear, setTempExitYear] = React.useState<number>(1);
   const [tempExitAmount, setTempExitAmount] = React.useState<string>("");
 
-  const totalYears = inputs.yearsOwnedPast + inputs.yearsProjectedFuture;
+  const parsedYearsOwnedPast = inputs.yearsOwnedPast === "" || inputs.yearsOwnedPast === null ? 0 : Number(inputs.yearsOwnedPast);
+  const parsedYearsProjectedFuture = inputs.yearsProjectedFuture === "" || inputs.yearsProjectedFuture === null ? 0 : Number(inputs.yearsProjectedFuture);
+  const totalYears = parsedYearsOwnedPast + parsedYearsProjectedFuture;
+
+  // Calculate exact compounded dues total over the ownership term
+  const compoundRate = (Number(inputs.customAnnualIncrease) || 0) / 100;
+  const rawExchangeAmt = Number(inputs.exchangeAnnualAmount) || 0;
+  let compoundedDuesTotal = 0;
+  for (let i = 1; i <= totalYears; i++) {
+    compoundedDuesTotal += rawExchangeAmt * Math.pow(1 + compoundRate, i - 1);
+  }
+
+  // Calculate exact compounded maintenance fee total over the ownership term
+  const initialMF = Number(inputs.initialMaintenanceFee) || 0;
+  let compoundedMaintenanceTotal = 0;
+  for (let i = 1; i <= totalYears; i++) {
+    compoundedMaintenanceTotal += initialMF * Math.pow(1 + compoundRate, i - 1);
+  }
   const currentCalendarYear = new Date().getFullYear();
-  const startCalendarYear = currentCalendarYear - inputs.yearsOwnedPast + 1;
+  const startCalendarYear = currentCalendarYear - parsedYearsOwnedPast + 1;
 
   // Build simple calendar years of ownership
   const yearOptions = React.useMemo(() => {
@@ -157,9 +174,11 @@ export const InputForm: React.FC<InputFormProps> = ({ inputs, onChange, onReset 
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ) => {
     const { name, value, type } = e.target;
-    let typedValue: string | number | boolean = value;
+    let typedValue: any = value;
 
-    if (type === "number" || type === "range") {
+    if (type === "number") {
+      typedValue = value === "" ? "" : Number(value);
+    } else if (type === "range") {
       typedValue = value === "" ? 0 : Number(value);
     } else if (type === "checkbox") {
       typedValue = (e.target as HTMLInputElement).checked;
@@ -189,10 +208,10 @@ export const InputForm: React.FC<InputFormProps> = ({ inputs, onChange, onReset 
         <button
           onClick={handleResetClick}
           className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 self-start sm:self-center text-xs font-bold text-indigo-650 hover:text-indigo-850 bg-indigo-50/70 hover:bg-indigo-100/80 border border-indigo-150/80 rounded-lg transition-all shadow-sm cursor-pointer shrink-0"
-          title="Reset all fields to initial audit defaults"
+          title="Clear all inputs and reset to zero"
         >
           <RotateCcw className="w-3.5 h-3.5 text-indigo-500" />
-          Reset to Defaults
+          Reset & Clear All
         </button>
       </div>
 
@@ -265,10 +284,10 @@ export const InputForm: React.FC<InputFormProps> = ({ inputs, onChange, onReset 
           Purchase & Financing Structure
         </h3>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="space-y-1.5">
             <label htmlFor="purchasePrice" className="block text-xs font-semibold text-slate-600">
-              Contract Purchase Price ($)
+              Contract Purchase Price
             </label>
             <div className="relative">
               <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 font-semibold text-sm">$</span>
@@ -276,7 +295,7 @@ export const InputForm: React.FC<InputFormProps> = ({ inputs, onChange, onReset 
                 id="purchasePrice"
                 type="number"
                 name="purchasePrice"
-                value={inputs.purchasePrice}
+                value={inputs.purchasePrice ?? ""}
                 onChange={handleInputChange}
                 min="0"
                 className="w-full bg-slate-50 border border-slate-200 text-slate-800 rounded-lg pl-8 pr-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 font-semibold"
@@ -285,8 +304,8 @@ export const InputForm: React.FC<InputFormProps> = ({ inputs, onChange, onReset 
           </div>
 
           <div className="space-y-1.5">
-            <label htmlFor="initialMaintenanceFee" className="block text-xs font-semibold text-slate-600">
-              Starting Annual Maintenance Fee ($)
+            <label htmlFor="initialMaintenanceFee" className="block text-xs font-bold text-slate-600">
+              What were they when they started?
             </label>
             <div className="relative">
               <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 font-semibold text-sm">$</span>
@@ -294,14 +313,41 @@ export const InputForm: React.FC<InputFormProps> = ({ inputs, onChange, onReset 
                 id="initialMaintenanceFee"
                 type="number"
                 name="initialMaintenanceFee"
-                value={inputs.initialMaintenanceFee}
+                value={inputs.initialMaintenanceFee ?? ""}
                 onChange={handleInputChange}
                 min="0"
                 className="w-full bg-slate-50 border border-slate-200 text-slate-800 rounded-lg pl-8 pr-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 font-semibold"
               />
             </div>
           </div>
+
+          <div className="space-y-1.5">
+            <label htmlFor="contractCount" className="block text-xs font-semibold text-slate-600">
+              Number of Contracts / Deeds Owned
+            </label>
+            <div className="relative">
+              <input
+                id="contractCount"
+                type="number"
+                name="contractCount"
+                value={inputs.contractCount ?? ""}
+                onChange={handleInputChange}
+                min="1"
+                placeholder="e.g. 1"
+                className="w-full bg-slate-50 border border-slate-200 text-slate-800 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 font-semibold"
+              />
+            </div>
+          </div>
         </div>
+
+        {initialMF > 0 && totalYears > 0 && (
+          <div className="flex items-start gap-2 bg-indigo-50/50 text-indigo-950 p-2.5 rounded-lg border border-indigo-100/40">
+            <AlertCircle className="w-4 h-4 text-indigo-500 shrink-0 mt-0.5" />
+            <p className="text-[10px] leading-relaxed">
+              Starting at <span className="font-extrabold text-indigo-900">${initialMF}</span> with <span className="font-bold text-indigo-900">{(Number(inputs.customAnnualIncrease) || 0).toFixed(1)}%</span> compounding increase, Year 2 becomes <span className="font-bold text-indigo-900">${Math.round(initialMF * (1 + compoundRate)).toLocaleString()}</span>, for an accumulated total of <span className="font-extrabold text-indigo-900">${Math.round(compoundedMaintenanceTotal).toLocaleString()}</span> over your {totalYears} years of ownership.
+            </p>
+          </div>
+        )}
 
         {/* Financing Section Toggle */}
         <div className="bg-slate-50 p-4 rounded-xl border border-slate-200/60 space-y-4">
@@ -363,7 +409,7 @@ export const InputForm: React.FC<InputFormProps> = ({ inputs, onChange, onReset 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div className="space-y-1">
                   <label htmlFor="downPayment" className="block text-[11px] font-bold text-slate-500 uppercase tracking-tight">
-                    Down Payment ($)
+                    Down Payment
                   </label>
                   <div className="relative">
                     <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs">$</span>
@@ -371,7 +417,7 @@ export const InputForm: React.FC<InputFormProps> = ({ inputs, onChange, onReset 
                       id="downPayment"
                       type="number"
                       name="downPayment"
-                      value={inputs.downPayment}
+                      value={inputs.downPayment ?? ""}
                       onChange={handleInputChange}
                       min="0"
                       className="w-full bg-white border border-slate-200 text-slate-800 rounded-lg pl-6 pr-2 py-2 text-xs focus:outline-none focus:ring-1 focus:ring-indigo-500"
@@ -381,7 +427,7 @@ export const InputForm: React.FC<InputFormProps> = ({ inputs, onChange, onReset 
 
                 <div className="space-y-1">
                   <label htmlFor="monthlyPayment" className="block text-[11px] font-bold text-slate-500 uppercase tracking-tight">
-                    Monthly Payment ($)
+                    Monthly Payment
                   </label>
                   <div className="relative">
                     <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs">$</span>
@@ -389,7 +435,7 @@ export const InputForm: React.FC<InputFormProps> = ({ inputs, onChange, onReset 
                       id="monthlyPayment"
                       type="number"
                       name="monthlyPayment"
-                      value={inputs.monthlyPayment}
+                      value={inputs.monthlyPayment ?? ""}
                       onChange={handleInputChange}
                       min="0"
                       className="w-full bg-white border border-slate-200 text-slate-800 rounded-lg pl-6 pr-2 py-2 text-xs focus:outline-none focus:ring-1 focus:ring-indigo-500"
@@ -405,7 +451,7 @@ export const InputForm: React.FC<InputFormProps> = ({ inputs, onChange, onReset 
                     id="loanTermYears"
                     type="number"
                     name="loanTermYears"
-                    value={inputs.loanTermYears}
+                    value={inputs.loanTermYears ?? ""}
                     onChange={handleInputChange}
                     min="1"
                     max="30"
@@ -422,18 +468,16 @@ export const InputForm: React.FC<InputFormProps> = ({ inputs, onChange, onReset 
       <div className="space-y-5 pt-4 border-t border-slate-100">
         <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400">
           Simulation Timeline
-        </h3>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        </h3>        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Past Years Owned */}
           <div className="space-y-2">
-            <div className="flex justify-between items-center text-xs font-bold text-slate-650">
+            <div className="flex justify-between items-center text-xs font-bold text-slate-655">
               <span className="flex items-center gap-1 text-slate-500">
                 <Calendar className="w-3.5 h-3.5" />
                 Years Owned (Past)
               </span>
               <span className="bg-slate-100 text-slate-700 px-2.5 py-0.5 rounded-lg text-xs font-bold">
-                {inputs.yearsOwnedPast} yrs
+                {inputs.yearsOwnedPast || 0} yrs
               </span>
             </div>
             <input
@@ -442,7 +486,7 @@ export const InputForm: React.FC<InputFormProps> = ({ inputs, onChange, onReset 
               min="0"
               max="50"
               step="1"
-              value={inputs.yearsOwnedPast}
+              value={inputs.yearsOwnedPast === "" || inputs.yearsOwnedPast === null ? 0 : inputs.yearsOwnedPast}
               onChange={handleInputChange}
               className="w-full h-1.5 bg-slate-100 rounded-lg appearance-none cursor-pointer accent-indigo-600"
             />
@@ -454,13 +498,13 @@ export const InputForm: React.FC<InputFormProps> = ({ inputs, onChange, onReset 
 
           {/* Future Years to Project */}
           <div className="space-y-2">
-            <div className="flex justify-between items-center text-xs font-bold text-slate-650">
+            <div className="flex justify-between items-center text-xs font-bold text-slate-655">
               <span className="flex items-center gap-1 text-slate-500">
                 <Calendar className="w-3.5 h-3.5" />
                 Years to Project (Future)
               </span>
               <span className="bg-indigo-50 text-indigo-700 px-2.5 py-0.5 rounded-lg text-xs font-bold">
-                +{inputs.yearsProjectedFuture} yrs
+                +{inputs.yearsProjectedFuture || 0} yrs
               </span>
             </div>
             <input
@@ -469,7 +513,7 @@ export const InputForm: React.FC<InputFormProps> = ({ inputs, onChange, onReset 
               min="1"
               max="30"
               step="1"
-              value={inputs.yearsProjectedFuture}
+              value={inputs.yearsProjectedFuture === "" || inputs.yearsProjectedFuture === null ? 1 : inputs.yearsProjectedFuture}
               onChange={handleInputChange}
               className="w-full h-1.5 bg-slate-100 rounded-lg appearance-none cursor-pointer accent-indigo-600"
             />
@@ -600,13 +644,9 @@ export const InputForm: React.FC<InputFormProps> = ({ inputs, onChange, onReset 
                       <input
                         id="exchangeAnnualAmount"
                         type="number"
-                        value={inputs.exchangeAnnualAmount}
-                        onChange={(e) => {
-                          onChange({
-                            ...inputs,
-                            exchangeAnnualAmount: Number(e.target.value) || 0
-                          });
-                        }}
+                        name="exchangeAnnualAmount"
+                        value={inputs.exchangeAnnualAmount ?? ""}
+                        onChange={handleInputChange}
                         className="w-full bg-slate-50 border border-slate-200 text-slate-800 rounded-lg pl-6 pr-2 py-1.5 text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-cyan-500"
                       />
                     </div>
@@ -616,7 +656,7 @@ export const InputForm: React.FC<InputFormProps> = ({ inputs, onChange, onReset 
                 <div className="flex items-start gap-2 bg-cyan-500/10 text-cyan-850 p-2.5 rounded-lg border border-cyan-200/40">
                   <AlertCircle className="w-4 h-4 text-cyan-600 shrink-0 mt-0.5" />
                   <p className="text-[10px] leading-relaxed">
-                    This adds an annual <span className="font-extrabold text-cyan-900">${inputs.exchangeAnnualAmount}</span> directly to <span className="font-bold text-cyan-950">each year they have owned</span> and project to own ({totalYears} years total), for a cumulative total of <span className="font-bold text-cyan-950">${inputs.exchangeAnnualAmount * totalYears}</span>.
+                    This adds an annual <span className="font-extrabold text-cyan-900">${inputs.exchangeAnnualAmount || 0}</span> (compounding at <span className="font-bold text-cyan-900">{(Number(inputs.customAnnualIncrease) || 0).toFixed(1)}%</span> per year) directly to <span className="font-bold text-cyan-950">each year they have owned</span> and project to own ({totalYears} years total), for a cumulative total of <span className="font-bold text-cyan-950">${Math.round(compoundedDuesTotal).toLocaleString()}</span>.
                   </p>
                 </div>
               </div>

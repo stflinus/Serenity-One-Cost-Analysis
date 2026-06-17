@@ -16,27 +16,28 @@ export interface CustomFeeEntry {
 export interface CalculatorInputs {
   resortId: string;
   customAnnualIncrease: number;
-  purchasePrice: number;
+  purchasePrice: number | null | "";
+  contractCount: number | null | ""; // Number of deeds/contracts owned
   
   // Mortgage Info
   isFinanced: boolean;
   isMortgagePaidOff: boolean; // if financed, is it fully paid off now?
-  downPayment: number;
-  monthlyPayment: number;
-  loanTermYears: number; // e.g. 5, 7, 10
+  downPayment: number | null | "";
+  monthlyPayment: number | null | "";
+  loanTermYears: number | null | "";
   
   // Maintenance Fees
-  initialMaintenanceFee: number;
-  specialAssessmentsCount: number; // number of special assessments experienced/expected
-  specialAssessmentAmount: number; // average cost per special assessment
+  initialMaintenanceFee: number | null | "";
+  specialAssessmentsCount: number | null | ""; // number of special assessments experienced/expected
+  specialAssessmentAmount: number | null | ""; // average cost per special assessment
   
   // Membership / Other fees
-  annualMembershipDues: number; // exchange company fees, e.g. RCI, Interval International ($150)
+  annualMembershipDues: number | null | ""; // exchange company fees, e.g. RCI, Interval International ($150)
   
   // Advanced Interactive Dynamic Costs
   hasExchangeDues: boolean;
   exchangeProvider: 'rci' | 'ii' | 'custom' | null;
-  exchangeAnnualAmount: number;
+  exchangeAnnualAmount: number | null | "";
   customExchangeDues: CustomFeeEntry[];
   hasSpecialAssessments: boolean;
   customSpecialAssessments: CustomFeeEntry[];
@@ -44,12 +45,12 @@ export interface CalculatorInputs {
   customExitFees: CustomFeeEntry[];
   
   // Timeframe
-  yearsOwnedPast: number;  // How many years owned up to now
-  yearsProjectedFuture: number; // How many years to project into the future
+  yearsOwnedPast: number | null | "";  // How many years owned up to now
+  yearsProjectedFuture: number | null | ""; // How many years to project into the future
   
   // Comparison
-  alternativeVacationCost: number; // how much would they spend annually on standard hotel vacations
-  investmentReturnRate: number; // what if they invested the initial down payment + maintenance fees (e.g. 8% S&P return)
+  alternativeVacationCost: number | null | ""; // how much would they spend annually on standard hotel vacations
+  investmentReturnRate: number | null | ""; // what if they invested the initial down payment + maintenance fees (e.g. 8% S&P return)
 }
 
 export interface YearBreakdown {

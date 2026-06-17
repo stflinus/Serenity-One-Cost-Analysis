@@ -1,32 +1,36 @@
 import { CalculatorInputs, CalculationResults, YearBreakdown } from "../types";
 
 export function calculateTimeshareCosts(inputs: CalculatorInputs): CalculationResults {
-  const {
-    resortId,
-    customAnnualIncrease,
-    purchasePrice,
-    isFinanced,
-    isMortgagePaidOff,
-    downPayment,
-    monthlyPayment,
-    loanTermYears,
-    initialMaintenanceFee,
-    specialAssessmentsCount,
-    specialAssessmentAmount,
-    annualMembershipDues,
-    hasExchangeDues,
-    exchangeProvider,
-    exchangeAnnualAmount,
-    customExchangeDues,
-    hasSpecialAssessments,
-    customSpecialAssessments,
-    hasPaidExitFees,
-    customExitFees,
-    yearsOwnedPast,
-    yearsProjectedFuture,
-    alternativeVacationCost,
-    investmentReturnRate
-  } = inputs;
+  const safeNum = (v: any) => {
+    if (v === null || v === undefined || v === "") return 0;
+    const n = Number(v);
+    return isNaN(n) ? 0 : n;
+  };
+
+  const resortId = inputs.resortId;
+  const customAnnualIncrease = safeNum(inputs.customAnnualIncrease);
+  const purchasePrice = safeNum(inputs.purchasePrice);
+  const isFinanced = inputs.isFinanced;
+  const isMortgagePaidOff = inputs.isMortgagePaidOff;
+  const downPayment = safeNum(inputs.downPayment);
+  const monthlyPayment = safeNum(inputs.monthlyPayment);
+  const loanTermYears = safeNum(inputs.loanTermYears);
+  const initialMaintenanceFee = safeNum(inputs.initialMaintenanceFee);
+  const specialAssessmentsCount = safeNum(inputs.specialAssessmentsCount);
+  const specialAssessmentAmount = safeNum(inputs.specialAssessmentAmount);
+  const annualMembershipDues = safeNum(inputs.annualMembershipDues);
+  const hasExchangeDues = inputs.hasExchangeDues;
+  const exchangeProvider = inputs.exchangeProvider;
+  const exchangeAnnualAmount = safeNum(inputs.exchangeAnnualAmount);
+  const customExchangeDues = inputs.customExchangeDues;
+  const hasSpecialAssessments = inputs.hasSpecialAssessments;
+  const customSpecialAssessments = inputs.customSpecialAssessments;
+  const hasPaidExitFees = inputs.hasPaidExitFees;
+  const customExitFees = inputs.customExitFees;
+  const yearsOwnedPast = safeNum(inputs.yearsOwnedPast);
+  const yearsProjectedFuture = safeNum(inputs.yearsProjectedFuture);
+  const alternativeVacationCost = safeNum(inputs.alternativeVacationCost);
+  const investmentReturnRate = safeNum(inputs.investmentReturnRate);
 
   const totalYears = yearsOwnedPast + yearsProjectedFuture;
   const breakdown: YearBreakdown[] = [];
@@ -107,9 +111,17 @@ export function calculateTimeshareCosts(inputs: CalculatorInputs): CalculationRe
 
     // 3. Other Fees (annual dues, e.g., RCI, II, Exit/Termination Fees)
     let otherFeesPaidThisYear = 0;
-    if (hasExchangeDues) {
-      otherFeesPaidThisYear = exchangeAnnualAmount || 0;
+    
+    // Compound and add base annual membership dues if present
+    if (annualMembershipDues > 0) {
+      otherFeesPaidThisYear += annualMembershipDues * Math.pow(1 + maintenanceIncreaseRate, y - 1);
     }
+    
+    // Compound and add exchange dues if enabled
+    if (hasExchangeDues && exchangeAnnualAmount > 0) {
+      otherFeesPaidThisYear += exchangeAnnualAmount * Math.pow(1 + maintenanceIncreaseRate, y - 1);
+    }
+
     if (hasPaidExitFees && customExitFees && customExitFees.length > 0) {
       const matchingExitFees = customExitFees.filter(ef => ef.year === y);
       otherFeesPaidThisYear += matchingExitFees.reduce((sum, ef) => sum + ef.amount, 0);
