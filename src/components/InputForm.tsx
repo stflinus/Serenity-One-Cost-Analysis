@@ -7,14 +7,45 @@ interface InputFormProps {
   inputs: CalculatorInputs;
   onChange: (inputs: CalculatorInputs) => void;
   onReset: () => void;
+  contractLabel?: string;
+  onLabelChange?: (label: string) => void;
+  onAddAnotherContract?: () => void;
+  onCompletePortfolio?: () => void;
+  contractIndex?: number;
+  totalContracts?: number;
 }
 
-export const InputForm: React.FC<InputFormProps> = ({ inputs, onChange, onReset }) => {
+export const InputForm: React.FC<InputFormProps> = ({
+  inputs,
+  onChange,
+  onReset,
+  contractLabel = "",
+  onLabelChange,
+  onAddAnotherContract,
+  onCompletePortfolio,
+  contractIndex = 1,
+  totalContracts = 1,
+}) => {
   // Local state for Special Assessments conversational questionnaire
   const [saFlowStep, setSaFlowStep] = React.useState<"not_started" | "asking_yes_no" | "adding" | "more_prompt" | "completed">("not_started");
 
   // Local state for Exit, Sales or Termination Fees conversational questionnaire
   const [exitFlowStep, setExitFlowStep] = React.useState<"not_started" | "asking_yes_no" | "adding" | "more_prompt" | "completed">("not_started");
+
+  const formContainerRef = React.useRef<HTMLDivElement>(null);
+
+  React.useEffect(() => {
+    // Whenever a new sub-survey is loaded or initialized, scroll smoothly to the top of the form container 
+    // to give clear confirmation to the user that they are configuring the next resort's details.
+    if (formContainerRef.current) {
+      const elementPosition = formContainerRef.current.getBoundingClientRect().top;
+      const offsetPosition = elementPosition + window.scrollY - 100; // Account for the sticky top header bar
+      window.scrollTo({
+        top: offsetPosition,
+        behavior: "smooth"
+      });
+    }
+  }, []);
 
   const handleResetClick = () => {
     setSaFlowStep("not_started");
@@ -193,7 +224,7 @@ export const InputForm: React.FC<InputFormProps> = ({ inputs, onChange, onReset 
   const selectedResort = RESORT_LIST.find((r) => r.id === inputs.resortId) || RESORT_LIST[0];
 
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 md:p-8 space-y-8">
+    <div ref={formContainerRef} className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 md:p-8 space-y-8">
       {/* Head section */}
       <div className="border-b border-slate-100 pb-5 flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
         <div>
@@ -213,6 +244,76 @@ export const InputForm: React.FC<InputFormProps> = ({ inputs, onChange, onReset 
           <RotateCcw className="w-3.5 h-3.5 text-indigo-500" />
           Reset & Clear All
         </button>
+      </div>
+
+      {/* Multi-Resort Active Survey Progress Banner */}
+      {totalContracts > 1 && (
+        <div className="bg-indigo-50 border border-indigo-200/60 rounded-xl p-4 flex items-center justify-between gap-3">
+          <div className="flex gap-2.5 items-start">
+            <span className="bg-indigo-600 text-white rounded-lg w-7 h-7 flex items-center justify-center text-xs font-bold shrink-0 mt-0.5">
+              {contractIndex}
+            </span>
+            <div>
+              <h4 className="text-xs font-bold text-indigo-900 leading-tight">
+                Now Editing: Resort Survey {contractIndex} of {totalContracts}
+              </h4>
+              <p className="text-[11px] text-indigo-700 mt-0.5">
+                Configure unique purchase price, start year, and dues for <strong>{contractLabel || `Contract #${contractIndex}`}</strong>.
+              </p>
+            </div>
+          </div>
+          <span className="text-[10px] bg-indigo-100/70 text-indigo-800 font-bold px-2 py-0.5 rounded-md shrink-0 border border-indigo-200/40 uppercase tracking-wide">
+            Sub-Survey
+          </span>
+        </div>
+      )}
+
+      {/* Contract Nickname and Purchase Year */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pb-2">
+        <div className="space-y-2">
+          <label htmlFor="contractLabel" className="block text-xs font-bold text-slate-550 uppercase tracking-wider flex items-center justify-between">
+            <span className="flex items-center gap-1.5 text-slate-650 font-bold">
+              <Sparkles className="w-4 h-4 text-indigo-500" />
+              Contract Nickname / Label
+            </span>
+          </label>
+          <input
+            id="contractLabel"
+            type="text"
+            value={contractLabel}
+            onChange={(e) => onLabelChange && onLabelChange(e.target.value)}
+            className="w-full bg-slate-50 border border-slate-200 text-slate-800 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 font-bold"
+            placeholder="e.g. Hilton Orlando #1"
+          />
+        </div>
+
+        <div className="space-y-2">
+          <label htmlFor="purchaseYear" className="block text-xs font-bold text-slate-550 uppercase tracking-wider flex items-center justify-between">
+            <span className="flex items-center gap-1.5 text-slate-650 font-bold">
+              <Calendar className="w-4 h-4 text-slate-400" />
+              Year Purchased (Start Year)
+            </span>
+          </label>
+          <input
+            id="purchaseYear"
+            type="number"
+            min={1970}
+            max={currentCalendarYear}
+            value={currentCalendarYear - parsedYearsOwnedPast + 1}
+            onChange={(e) => {
+              const yr = Number(e.target.value);
+              if (yr && yr >= 1970 && yr <= currentCalendarYear) {
+                const newYearsPast = currentCalendarYear - yr + 1;
+                onChange({
+                  ...inputs,
+                  yearsOwnedPast: newYearsPast
+                });
+              }
+            }}
+            className="w-full bg-slate-50 border border-slate-200 text-slate-800 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 font-bold"
+            placeholder="e.g. 2018"
+          />
+        </div>
       </div>
 
       {/* Developer Dropdown */}
@@ -1084,6 +1185,45 @@ export const InputForm: React.FC<InputFormProps> = ({ inputs, onChange, onReset 
               )}
             </div>
           )}
+        </div>
+
+        {/* --- PORTFOLIO PROGRESSION: DO YOU HAVE MORE TIMESHARES? --- */}
+        <div className="bg-indigo-50/70 rounded-xl p-5 border border-indigo-100/80 space-y-4 shadow-inner">
+          <div className="flex items-center justify-between">
+            <h4 className="text-xs font-bold text-indigo-900 uppercase tracking-wider flex items-center gap-1.5">
+              <span className="w-2 h-2 bg-indigo-600 rounded-full animate-ping"></span>
+              Portfolio Analyzer
+            </h4>
+            <span className="text-[10px] bg-indigo-100/80 py-0.5 px-2 rounded-md font-mono text-indigo-700 font-bold border border-indigo-200/30">
+              Multiple Resorts
+            </span>
+          </div>
+
+          <div className="space-y-3">
+            <p className="text-xs text-indigo-950 font-bold leading-relaxed">
+              Do you own any other vacation club points or timeshares (such as a second Hilton, Marriott, Westgate, or Holiday Inn club) that we should calculate?
+            </p>
+            <p className="text-[11px] text-indigo-700 leading-relaxed leading-relaxed">
+              Clicking <strong>"Yes, add another"</strong> will save this timeshare and let you itemize another one. We will merge everything into a unified grand total ledger automatically.
+            </p>
+            
+            <div className="flex flex-col sm:flex-row gap-2 pt-1.5">
+              <button
+                type="button"
+                onClick={onAddAnotherContract}
+                className="flex-1 py-3 px-4 bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white border border-indigo-700 rounded-lg text-xs font-bold transition-all text-center flex items-center justify-center gap-1.5 shadow-sm hover:shadow-indigo-600/10 cursor-pointer"
+              >
+                <Plus className="w-4 h-4" /> Yes, add another resort
+              </button>
+              <button
+                type="button"
+                onClick={onCompletePortfolio}
+                className="flex-1 py-3 px-4 bg-white hover:bg-slate-50 border border-slate-250 text-slate-700 rounded-lg text-xs font-bold transition-all text-center cursor-pointer"
+              >
+                No, calculate final totals
+              </button>
+            </div>
+          </div>
         </div>
 
       </div>

@@ -111,3 +111,10 @@ export interface CalculationResults {
   
   breakdown: YearBreakdown[];
 }
+
+export interface TimeshareContract {
+  id: string;
+  label: string;
+  inputs: CalculatorInputs;
+}
+

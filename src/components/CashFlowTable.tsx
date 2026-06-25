@@ -17,6 +17,9 @@ export const CashFlowTable: React.FC<CashFlowTableProps> = ({ results }) => {
     }).format(value);
   };
 
+  const currentYear = new Date().getFullYear();
+  const filteredBreakdown = results.breakdown.filter((item) => item.calendarYear >= currentYear);
+
   const handleDownloadCSV = () => {
     // CSV Header row
     const headers = [
@@ -29,8 +32,8 @@ export const CashFlowTable: React.FC<CashFlowTableProps> = ({ results }) => {
       "Cumulative Sunk ($)"
     ];
 
-    // CSV Rows
-    const rows = results.breakdown.map((row) => [
+    // CSV Rows (Filtered to current year and onwards)
+    const rows = filteredBreakdown.map((row) => [
       row.calendarYear,
       row.label,
       row.mortgagePaidThisYear,
@@ -42,7 +45,7 @@ export const CashFlowTable: React.FC<CashFlowTableProps> = ({ results }) => {
 
     // Construct CSV content with metadata
     const csvContent = [
-      ["Timeshare Financial Audit Ledger Export"],
+      ["Timeshare Financial Audit Ledger Export (Current & Future Years)"],
       [`Generated on: ${new Date().toLocaleDateString()}`],
       [`Sunk Cost Past Spent: $${Math.round(results.pastTotalSpent).toLocaleString()}`],
       [`Estimated Refund Potential (70%): $${Math.round(results.pastTotalSpent * 0.70).toLocaleString()}`],
@@ -64,7 +67,7 @@ export const CashFlowTable: React.FC<CashFlowTableProps> = ({ results }) => {
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.setAttribute("href", url);
-    link.setAttribute("download", `Timeshare_Cash_Flow_Ledger_${results.breakdown[0]?.calendarYear || 2020}_to_${results.breakdown[results.breakdown.length - 1]?.calendarYear || 2045}.csv`);
+    link.setAttribute("download", `Timeshare_Cash_Flow_Ledger_${filteredBreakdown[0]?.calendarYear || currentYear}_to_${filteredBreakdown[filteredBreakdown.length - 1]?.calendarYear || 2045}.csv`);
     link.style.visibility = "hidden";
     document.body.appendChild(link);
     link.click();
@@ -72,8 +75,8 @@ export const CashFlowTable: React.FC<CashFlowTableProps> = ({ results }) => {
   };
 
   const visibleBreakdown = isExpanded 
-    ? results.breakdown 
-    : results.breakdown.slice(0, 5);
+    ? filteredBreakdown 
+    : filteredBreakdown.slice(0, 5);
 
   return (
     <div className="bg-white rounded-xl shadow-sm border border-slate-205 p-6 md:p-8 space-y-6">
@@ -84,7 +87,7 @@ export const CashFlowTable: React.FC<CashFlowTableProps> = ({ results }) => {
             Detailed Cash Flow Ledger
           </h2>
           <p className="text-xs text-slate-500 mt-1">
-            Annual itemized ledger from purchase year {results.breakdown[0]?.calendarYear || 2020} through {results.breakdown[results.breakdown.length - 1]?.calendarYear || 2045}.
+            Annual itemized ledger from current year {currentYear} through {filteredBreakdown[filteredBreakdown.length - 1]?.calendarYear || 2045}.
           </p>
         </div>
         
@@ -108,7 +111,7 @@ export const CashFlowTable: React.FC<CashFlowTableProps> = ({ results }) => {
               </>
             ) : (
               <>
-                Show Full {results.totalYears}-Yr Ledger <ChevronDown className="w-4 h-4" />
+                Show Full {filteredBreakdown.length}-Yr Ledger <ChevronDown className="w-4 h-4" />
               </>
             )}
           </button>
@@ -180,14 +183,14 @@ export const CashFlowTable: React.FC<CashFlowTableProps> = ({ results }) => {
         </table>
       </div>
  
-      {!isExpanded && results.totalYears > 5 && (
+      {!isExpanded && filteredBreakdown.length > 5 && (
         <div className="text-center pt-2">
           <button
             onClick={() => setIsExpanded(true)}
             className="inline-flex items-center gap-1.5 px-4 py-2 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-lg text-xs font-bold text-slate-600 transition-all shadow-sm"
           >
             <Eye className="w-3.5 h-3.5 text-slate-450" />
-            Expand Remaining {results.totalYears - 5} Years of Transactions
+            Expand Remaining {filteredBreakdown.length - 5} Years of Transactions
           </button>
         </div>
       )}

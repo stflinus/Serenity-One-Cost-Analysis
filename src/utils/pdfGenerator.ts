@@ -19,6 +19,7 @@ export function generatePdfSummary(inputs: CalculatorInputs, results: Calculatio
   };
 
   const getResortName = (id: string) => {
+    if (id === "multiple") return "Multiple Properties (Portfolio Audit)";
     const resort = RESORT_LIST.find((r) => r.id === id);
     return resort ? resort.name : id;
   };
@@ -50,13 +51,19 @@ export function generatePdfSummary(inputs: CalculatorInputs, results: Calculatio
   doc.setTextColor(255, 255, 255);
   doc.setFont("helvetica", "bold");
   doc.setFontSize(8.5);
-  doc.text("EXECUTIVE REPORT", 195, 18, { align: "right" });
+  doc.text("EXECUTIVE REPORT", 155, 18, { align: "right" });
 
   doc.setFont("helvetica", "normal");
   doc.setTextColor(156, 163, 175); // gray-400
   doc.setFontSize(7.5);
-  doc.text(`Generated: ${todayStr}`, 195, 24, { align: "right" });
-  doc.text("Classification: Confidentially Assessed", 195, 29, { align: "right" });
+  doc.text(`Generated: ${todayStr}`, 155, 24, { align: "right" });
+  doc.text("Classification: Confidentially Assessed", 155, 29, { align: "right" });
+
+  // --- Stamp Box in Upper Right Corner ---
+  // Outer box representing "the box that can have a stamp in it"
+  doc.setDrawColor(148, 163, 184); // slate-400
+  doc.setLineWidth(0.3);
+  doc.rect(162, 13, 33, 20); // Border only
 
   // --- Decorative Border Accent Line ---
   doc.setFillColor(99, 102, 241); // indigo-500
@@ -158,44 +165,39 @@ export function generatePdfSummary(inputs: CalculatorInputs, results: Calculatio
   const startYCosts = 63;
   doc.setTextColor(51, 65, 85);
   doc.setFont("helvetica", "bold");
-  doc.text("Sunk Outflow (Past Fees):", 112, startYCosts);
+  doc.text("Future Binding Outflow:", 112, startYCosts);
   doc.setFont("helvetica", "normal");
-  doc.text(formatCurrency(results.pastTotalSpent), 162, startYCosts);
-
-  doc.setFont("helvetica", "bold");
-  doc.text("Future Binding Outflow:", 112, startYCosts + 6);
-  doc.setFont("helvetica", "normal");
-  doc.text(formatCurrency(results.futureTotalSpent), 162, startYCosts + 6);
+  doc.text(formatCurrency(results.futureTotalSpent), 162, startYCosts);
 
   // Divider line
   doc.setDrawColor(203, 213, 225); // slate-300
-  doc.line(112, startYCosts + 9, 196, startYCosts + 9);
+  doc.line(112, startYCosts + 3, 196, startYCosts + 3);
 
   // Highlight Outflow Total
   doc.setFont("helvetica", "bold");
   doc.setTextColor(190, 24, 74); // rose-700
-  doc.text("LIFETIME CONTRACT TOTAL:", 112, startYCosts + 14);
-  doc.text(formatCurrency(results.grandTotalCost), 162, startYCosts + 14);
+  doc.text("LIFETIME CONTRACT TOTAL:", 112, startYCosts + 8);
+  doc.text(formatCurrency(results.grandTotalCost), 162, startYCosts + 8);
 
   // Reset text color for standard metrics
   doc.setTextColor(51, 65, 85);
   doc.setFont("helvetica", "normal");
   doc.setFontSize(7.5);
-  doc.text("Total Mortgage & Interest:", 112, startYCosts + 20);
-  doc.text(formatCurrency(results.grandTotalMortgage), 162, startYCosts + 20);
+  doc.text("Total Mortgage & Interest:", 112, startYCosts + 14);
+  doc.text(formatCurrency(results.grandTotalMortgage), 162, startYCosts + 14);
 
-  doc.text("Total Maintenance & Dues:", 112, startYCosts + 25);
-  doc.text(formatCurrency(results.grandTotalMaintenanceFees + results.grandTotalOther), 162, startYCosts + 25);
+  doc.text("Total Maintenance & Dues:", 112, startYCosts + 19);
+  doc.text(formatCurrency(results.grandTotalMaintenanceFees + results.grandTotalOther), 162, startYCosts + 19);
 
-  doc.line(112, startYCosts + 28, 196, startYCosts + 28);
+  doc.line(112, startYCosts + 22, 196, startYCosts + 22);
 
   // Asset Recovery Options
   doc.setFont("helvetica", "bold");
   doc.setTextColor(16, 185, 129); // emerald-600
   doc.setFontSize(7);
-  doc.text("Estimated Refund (with full accounting):", 112, startYCosts + 32);
+  doc.text("Estimated Refund (with full accounting):", 112, startYCosts + 26);
   doc.setFontSize(7.5);
-  doc.text(formatCurrency(results.pastTotalSpent * 0.70), 162, startYCosts + 32);
+  doc.text(formatCurrency(results.pastTotalSpent * 0.70), 162, startYCosts + 26);
 
   const cCount = inputs.contractCount === "" || inputs.contractCount === null ? 0 : Number(inputs.contractCount);
   let exitOnlyCost = 0;
@@ -225,29 +227,16 @@ export function generatePdfSummary(inputs: CalculatorInputs, results: Calculatio
 
   doc.setFont("helvetica", "normal");
   doc.setTextColor(51, 65, 85);
-  doc.text("Refund-Only Program Fee:", 112, startYCosts + 37);
-  doc.text(formatCurrency(refundCost, refundCost % 1 !== 0), 162, startYCosts + 37);
+  doc.text("Refund-Only Program Fee:", 112, startYCosts + 31);
+  doc.text(formatCurrency(refundCost, refundCost % 1 !== 0), 162, startYCosts + 31);
 
-  doc.text("Exit-Only Program Fee:", 112, startYCosts + 42);
-  doc.text(formatCurrency(exitOnlyCost, exitOnlyCost % 1 !== 0), 162, startYCosts + 42);
+  doc.text("Exit-Only Program Fee:", 112, startYCosts + 36);
+  doc.text(formatCurrency(exitOnlyCost, exitOnlyCost % 1 !== 0), 162, startYCosts + 36);
 
-  doc.text("Combined Refund & Exit Fee:", 112, startYCosts + 47);
-  doc.text(formatCurrency(combinedCost, combinedCost % 1 !== 0), 162, startYCosts + 47);
+  doc.text("Combined Refund & Exit Fee:", 112, startYCosts + 41);
+  doc.text(formatCurrency(combinedCost, combinedCost % 1 !== 0), 162, startYCosts + 41);
 
-  doc.setDrawColor(203, 213, 225);
-  doc.line(112, startYCosts + 50, 196, startYCosts + 50);
 
-  // Hotel Comparison Row
-  doc.setFont("helvetica", "bold");
-  doc.setTextColor(79, 70, 229); // indigo-600
-  doc.text("Alternative Hotel Vacation Cost:", 112, startYCosts + 55);
-  doc.text(formatCurrency(results.alternativeGrandTotalVacationCost), 162, startYCosts + 55);
-
-  doc.setFont("helvetica", "bold");
-  doc.setTextColor(51, 65, 85);
-  doc.text("Net Variance (Excess Lost):", 112, startYCosts + 61);
-  doc.setTextColor(results.netLossVsVacation > 0 ? 190 : 16, results.netLossVsVacation > 0 ? 24 : 185, results.netLossVsVacation > 0 ? 74 : 129);
-  doc.text(`${results.netLossVsVacation > 0 ? "+" : ""}${formatCurrency(results.netLossVsVacation)}`, 162, startYCosts + 61);
 
   // --- Draw program remediation solutions with 3 paths and bullet points ---
   doc.setFont("helvetica", "bold");
@@ -596,6 +585,7 @@ export function generatePdfSummary(inputs: CalculatorInputs, results: Calculatio
   doc.text("TIMESHARE LIABILITY REPORT SUMMARY", 10, 284);
   doc.text("Page 2 of 2", 195, 284, { align: "right" });
 
-  // Save the PDF
-  doc.save("Serenity_Timeshare_Audit_Summary.pdf");
+  // Open the PDF in a new window/tab without saving it to the local hard drive
+  const blobUrl = doc.output("bloburl");
+  window.open(blobUrl, "_blank");
 }
